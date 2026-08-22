@@ -976,7 +976,7 @@ Ext.define('PVE.node.StatusView', {
                     const testResult = upsData['ups.test.result'];
                     const batteryChargeLow = upsData['battery.charge.low'];
                     const batteryRuntimeLow = upsData['battery.runtime.low'];
-                    const upsRealPowerNominal = upsData['ups.realpower.nominal'];
+                    const upsRealPower = upsData['ups.realpower'];
                     const batteryMfrDate = upsData['battery.mfr.date'];
 
                     // Main status line with all metrics
@@ -1053,12 +1053,8 @@ Ext.define('PVE.node.StatusView', {
                     // Calculate actual watt usage
                     if (statusLine) statusLine += ' | ';
                     let actualWattage = null;
-                    if (upsLoad && upsRealPowerNominal) {
-                        const load = parseFloat(upsLoad);
-                        const nominal = parseFloat(upsRealPowerNominal);
-                        if (!isNaN(load) && !isNaN(nominal)) {
-                            actualWattage = Math.round((load / 100) * nominal);
-                        }
+                    if (upsRealPower && !isNaN(parseFloat(upsRealPower))) {
+                        actualWattage = Math.round(parseFloat(upsRealPower));
                     }
 
                     // Real power (calculated watt usage)
