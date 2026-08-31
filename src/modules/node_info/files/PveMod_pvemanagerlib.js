@@ -1946,35 +1946,61 @@ Ext.define('PVE.mod.DcGpuGauge', {
         return nodes;
     },
 
+    paintGauge: function(gauge, ratio, text) {
+        if (!gauge || gauge.isDestroyed || !Ext.isFunction(gauge.updateValue)) {
+            return;
+        }
+        gauge.updateValue(ratio, text);
+        // Polar chart can keep value 0 until after the first real layout.
+        Ext.defer(function() {
+            if (!gauge.isDestroyed) {
+                gauge.updateValue(ratio, text);
+            }
+        }, 50);
+    },
+
     applyAggregate: function(gauge, agg) {
         if (!gauge || gauge.isDestroyed) {
             return;
         }
         if (!agg.count) {
-            gauge.hide();
-            if (gauge.ownerCt) {
-                gauge.ownerCt.updateLayout();
+            if (!gauge.isHidden()) {
+                gauge.hide();
+                if (gauge.ownerCt) {
+                    gauge.ownerCt.updateLayout();
+                }
             }
             return;
         }
-        gauge.show();
-        const ratio = agg.utilSum / agg.count / 100;
+
+        let ratio;
         let text;
         if (agg.vramTotal > 0) {
+            // Match Memory/Storage: arc follows used/total, not compute util.
+            ratio = agg.vramUsed / agg.vramTotal;
             text = Ext.String.format(
                 gettext('{0} of {1}'),
                 Proxmox.Utils.render_size(agg.vramUsed),
                 Proxmox.Utils.render_size(agg.vramTotal),
             );
         } else {
+            ratio = agg.utilSum / agg.count / 100;
             text = Ext.String.format(gettext('of {0} GPU(s)'), agg.count);
         }
-        if (Ext.isFunction(gauge.updateValue)) {
-            gauge.updateValue(ratio, text);
+        if (!Number.isFinite(ratio) || ratio < 0) {
+            ratio = 0;
+        } else if (ratio > 1) {
+            ratio = 1;
         }
-        if (gauge.ownerCt) {
-            gauge.ownerCt.updateLayout();
+
+        const wasHidden = gauge.isHidden();
+        if (wasHidden) {
+            gauge.show();
+            if (gauge.ownerCt) {
+                gauge.ownerCt.updateLayout();
+            }
         }
+        this.paintGauge(gauge, ratio, text);
     },
 
     refresh: function(summary, done) {
