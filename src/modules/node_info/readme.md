@@ -2,6 +2,8 @@
 
 Extends the Proxmox VE node status view with live hardware sensor data. A background daemon collects data from the configured sources and exposes it through the PVE API.
 
+When GPU monitoring is enabled, Datacenter → Summary → Resources also shows a GPU gauge next to CPU, Memory, and Storage. The percentage is average utilisation across NVIDIA (`utilization.gpu`) and Intel (`Render/3D` busy) devices on online nodes. The caption is VRAM used/total when NVIDIA reports memory, otherwise `of N GPU(s)`. The gauge is hidden when no GPU data is available.
+
 ## Features
 
 ### Temperature Sensors (lm-sensors)
